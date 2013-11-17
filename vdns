@@ -1,21 +1,29 @@
 #!/bin/bash
-# Versão 1.4.9
-# percio.andrade@hotmail.com
+#
+##################################################################
+# Author  : Percio Andrade
+# Email	  : percio.andrade@hotmail.com.br
+# Info    : Shell script to consult dns and register from domain
+# Version : 1.0 ( beta )
+##################################################################
+#
+# If you find any bug please, make contact.
+#
 
-# CONFIG #
-VERSION="1.4.9"
+## INITIAL CONFIG
+uVERSION="1.0"
 DATE=`date`
 DOMAIN=$2
 
-# DOCUMENTATION #
+## DOCUMENTATION
 RFC2181="http://tools.ietf.org/html/rfc2181"
-vDNS="http://50.22.31.32/~gatorweb/scripts/ssh/vdns/vdns"
+vDNS="https://github.com/percioandrade/shell/blob/master/vdns"
 
-# INDICATORS #
+## INDICATORS
 BAR="-- DOMAIN -------------- TTL --------- TYPE ---------- VALUE ------"
 MXBAR="-- DOMAIN -------------- TTL --------- TYPE --- PTY --- VALUE ------"
 
-# BASHCSS #
+## BASHCSS
 pret='\E[0;30m'   # Black
 verm='\E[0;31m'   # Red
 verd='\E[0;32m'   # Green
@@ -29,8 +37,9 @@ OK="${verd}[OK]${rese}";
 ATT="${amar}[!]${rese}";
 FAIL="${verm}[!]${rese}";
 
-# HELP INFO #
-function SHOW_HELP() {
+## HELP INFO
+function SHOW_HELP()
+{
   echo "
   usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]
 
@@ -61,7 +70,7 @@ function SHOW_HELP() {
 }
 
 
-# CHECK DEPENDECIES #
+## CHECK DEPENDECIES
 if [ ! -f '/usr/bin/dig' ];then
 echo -e "
   ${FAIL} - The application ${amar}dig${rese} is not installed on your computer, please install in order to run this script:
@@ -84,10 +93,10 @@ echo -e "
  exit
 fi
 
-# CHECK VERSION #
+## CHECK VERSION
 function SHOW_VERSION()
 {
-vCURL=$(curl -s $vDNS | grep -m1 "VERSION=" | cut -d '"' -f2)
+vCURL=$(curl -s $vDNS | grep -m1 "vVERSION=" | cut -d '"' -f2)
  if [ $VERSION != $vCURL ]; then
     echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update. [ http://50.22.31.32/~gatorweb/scripts/ssh/vdns/vdns ].\n"
   else
@@ -95,7 +104,7 @@ vCURL=$(curl -s $vDNS | grep -m1 "VERSION=" | cut -d '"' -f2)
  fi
 }
 
-# ARGUMENT CHECK #
+## ARGUMENT CHECK
 if [ -z "$1" ];then
   echo "No arguments parsed, use -h for help information."
    exit
@@ -110,7 +119,7 @@ if [ -z "$1" ];then
    exit
 fi
 
-# DOMAIN CHECK #
+## DOMAIN CHECK
 if [ -z "$2" ]; then
     echo "Please inform a domain, use -h for help information."
   exit
@@ -122,7 +131,7 @@ echo -e "
 ###########################################
 "
 
-# CHECK BR DOMAIN # 
+## CHECK BR DOMAIN # 
 function REGISTRO_BR()
 {
 rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido');
@@ -143,7 +152,7 @@ rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" 
  fi
 }
 
-# CHECK INTERNATIONAL DOMAIN #
+## CHECK INTERNATIONAL DOMAIN
 function INTERNATION_DOMAIN()
 {
 rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not")
@@ -155,7 +164,7 @@ rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not")
  fi
 }
 
-# INIT QUERIES #
+## INIT QUERIES
 
 echo -ne '\nPlease Wait...\n'
 
@@ -169,70 +178,72 @@ fi
 
 echo -ne '\nRNS -   ####                (10%)\r'
 
-# GET ROOT SERVER #
+## GET ROOT SERVER
 ROOTS=$(dig DS +additional $DOMAIN | grep SOA | awk '{print $5}' | sort -dbf)
 
-# GET FIST NAMESERVER #
+## GET FIST NAMESERVER
 SRV=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -m1 NS | awk '{print $5}' | sort -dbf)
 
-# GET IP FROM ROOTSERVER #
+## GET IP FROM ROOTSERVER
 IPNS=$(dig A +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | sort -dbf | grep A | awk '{print $5}')
 
 echo -ne 'NSR -   #######               (20%)\r'
 
-# CHECK ROOTSERVER #
+## CHECK ROOTSERVER
 NAMESERVER=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -v SOA | sort -dbf)
 
 echo -ne 'DNS -   ##########            (30%)\r'
 
-# GET IP FROM WEBHOST #
+## GET IP FROM WEBHOST
 IPDNS=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$SRV | sort -dbf | grep A | awk '{print $5}')
 
-# CHECK DNS #
+## CHECK DNS
 NS=$(dig NS +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN @$SRV | sort -dbf)
 
-# if NS fail from query "NS" we get directly from domain
-#FAILIP=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN | sort -dbf | grep A | awk '{print $5}')
+## If NS fail from query "NS" we get directly from domain
 FAILNS=$(dig NS +nostats +nocmd +nocomments +noquestion $DOMAIN | grep NS)
 
 echo -ne 'WWW -   ############          (40%)\r'
 
-# CHECK WWW FROM DOMAIN #
+## CHECK WWW FROM DOMAIN
 A=$(dig WWW +short $DOMAIN @$SRV | sort -dbf)
 
 echo -ne 'MX -    ###############       (50%)\r'
 
-# CHECK MX #
+## CHECK MX
 MX=$(dig -t MX +noall +answer $DOMAIN @$SRV | sort -dbf)
 
 echo -ne 'RVS -   #################     (60%)\r'
 
-# CHECK REVERSE #
+## CHECK REVERSE
 REVERSE=$(dig -x $A +additional +short +norec)
 
 echo -ne 'SPF -   ###################   (70%)\r'
 
-# CHECK SPF #
+## CHECK SPF
 SPF=$(dig TXT +short $DOMAIN @$SRV | sort -dbf)
 
 echo -ne 'DKIM -  ####################  (80%)\r'
 
-# CHECK DKIM DEFAULT #
+## CHECK DKIM DEFAULT
 DKIM=$(dig -ttxt default._domainkey.$DOMAIN @$SRV +short | grep -v spf1)
 
 echo -ne 'PING -  ######################(90%)\r'
 
-# CHECK PING #
+## CHECK PING
 vPING=$(ping -q -c 1 $DOMAIN >/dev/null)
 
 echo -ne "${OK} - ######################(100%)\n"
 
-# ---
+
+
 	###########################
-	### Do not modify below ###
+	### DO NOT MODIFY BELOW ###
 	###########################
 
-# NS QUERY #
+
+
+## NS QUERY
 function SHOW_NS()
 {
 echo " 
@@ -251,7 +262,7 @@ echo "
  fi
 }
 
-# NSR QUERY #
+## NSR QUERY
 function SHOW_DNS()
 {
 echo "
@@ -271,9 +282,9 @@ echo "
  fi
 }	
 
-# WWW QUERY #
-function SHOW_WWW() {
-
+## WWW QUERY
+function SHOW_WWW()
+{
 echo "
 -------------------------------------------|			
 			     --=== WWW ===--
@@ -286,7 +297,7 @@ echo "
  fi
 }
 
-# PING QUERY #
+## PING QUERY
 function SHOW_PING()
 {
  if ! ${vPING} ; then
@@ -298,7 +309,7 @@ function SHOW_PING()
  fi
 }
 
-# MX QUERY #
+## MX QUERY
 function SHOW_MX()
 {
 echo "
@@ -313,7 +324,7 @@ echo "
  fi
 }
 
-# REVERSE QUERY #
+## REVERSE QUERY
 function SHOW_REVERSE()
 {
  if [ -z "${REVERSE}" ]; then
@@ -323,7 +334,7 @@ function SHOW_REVERSE()
  fi
 }
 
-# SPF QUERY #
+## SPF QUERY
 function SHOW_SPF()
 {
  if [ -z "${SPF}" ] || [ "${SPF}" = "'TXT'" ]; then
@@ -333,7 +344,7 @@ function SHOW_SPF()
  fi
 }
 
-# DKIM QUERY
+## DKIM QUERY
 function SHOW_DKIM()
 {
 echo "
