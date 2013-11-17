@@ -9,7 +9,6 @@
 
 # If you find any bug please, make contact.
 
-
 ## INITIAL CONFIG
 VERSION="1.0"
 DATE=`date`
@@ -96,9 +95,9 @@ fi
 ## CHECK VERSION
 function SHOW_VERSION()
 {
-vCURL=$(curl -s $vDNS | grep -m1 "vVERSION=" | cut -d '"' -f2)
+vCURL=$(curl -s $vDNS | grep -m1 "VERSION=" | cut -d '"' -f2)
  if [ $VERSION != $vCURL ]; then
-    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update. [ http://50.22.31.32/~gatorweb/scripts/ssh/vdns/vdns ].\n"
+    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on $vDNS \n"
   else
     echo -e "\n${OK} - Your vdns version is up to date ${verd}$VERSION${rese}\n"
  fi
