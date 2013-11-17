@@ -1,0 +1,402 @@
+#!/bin/bash
+# Version: 1.0
+# percio.andrade@hotmail.com
+# Shell Script to consult DNS.
+
+# CONFIG #
+VERSION="1.0"
+DATE=`date`
+DOMAIN=$2
+
+# DOCUMENTATION #
+RFC2181="http://tools.ietf.org/html/rfc2181"
+vDNS="http://50.22.31.32/~gatorweb/scripts/ssh/vdns/vdns"
+
+# INDICATORS #
+BAR="-- DOMAIN -------------- TTL --------- TYPE ---------- VALUE ------"
+MXBAR="-- DOMAIN -------------- TTL --------- TYPE --- PTY --- VALUE ------"
+
+# BASHCSS #
+pret='\E[0;30m'   # Black
+verm='\E[0;31m'   # Red
+verd='\E[0;32m'   # Green
+amar='\E[0;33m'   # Yellow
+azul='\E[0;34m'   # Blue
+mage='\E[0;35m'   # Magenta
+cian='\E[0;36m'   # Ciano
+bran='\E[0;37m'   # White
+rese=$(tput sgr0) # No color.
+OK="${verd}[OK]${rese}";
+ATT="${amar}[!]${rese}";
+FAIL="${verm}[!]${rese}";
+
+# HELP INFO #
+function SHOW_HELP() {
+  echo "
+  usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]
+
+  Options:
+
+        -a    |   --all         : Full DNS lookup
+        -n    |   --ns          : Only return servers NS
+        -d    |   --dns         : Only return servers NSR
+        -w    |   --www         : Only return WWW
+        -p    |   --ping        : Only return ping check on WWW
+        -m    |   --mx          : Only return MX
+        -r    |   --reverse     : Only return reverse
+        -f    |   --spf         : Only return SPF
+        -k    |   --dkim        : Only return DKIM
+				-b    |   --br		: Consult domain on registro.br
+        -i    |   --int		: Consults domain o nic.com
+				-u    |   --update      : Verify if exist update
+        -s    |   --save        : Save Query on txt file
+				-h    |   --help	: Shows available functions
+  eg:
+
+  vdns -a domain.com
+  vdns -k domain.com
+  vdns -s domain.com
+       "
+  exit
+
+}
+
+
+# CHECK DEPENDECIES #
+if [ ! -f '/usr/bin/dig' ];then
+echo -e "
+  ${FAIL} - The application ${amar}dig${rese} is not installed on your computer, please install in order to run this script:
+  
+  - RedHat: yum install dig
+  - Debian: apt-get install dig
+  - Arch: pacman -S dnsutils
+	"
+ exit
+
+  elif [ ! -f '/usr/bin/curl' ];then
+
+echo -e "
+  ${FAIL} - The application ${amar}curl${rese} is not not installed on your computer, please install in order to run this script:
+
+  - RedHat: yum install curl
+  - Debian: apt-get install curl
+  - Arch: pacman -S curl
+	"
+ exit
+fi
+
+# CHECK VERSION #
+function SHOW_VERSION()
+{
+vCURL=$(curl -s $vDNS | grep -m1 "VERSION=" | cut -d '"' -f2)
+ if [ $VERSION != $vCURL ]; then
+    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update. [ http://50.22.31.32/~gatorweb/scripts/ssh/vdns/vdns ].\n"
+  else
+    echo -e "\n${OK} - Your vdns version is up to date ${verd}$VERSION${rese}\n"
+ fi
+}
+
+# ARGUMENT CHECK #
+if [ -z "$1" ];then
+  echo "No arguments parsed, use -h for help information."
+   exit
+ elif [ "$1" = "-u" ];then
+     SHOW_VERSION
+   exit  
+ elif [ "$1" = "-h" ];then
+     SHOW_HELP
+   exit
+ elif [ "$1" = "-" ];then
+   echo "Incorrect argument, please use -h for hel information."
+   exit
+fi
+
+# DOMAIN CHECK #
+if [ -z "$2" ]; then
+    echo "Please inform a domain, use -h for help information."
+  exit
+fi
+
+echo -e "
+###########################################
+- DNS info for: ${DOMAIN}
+###########################################
+"
+
+# CHECK BR DOMAIN # 
+function REGISTRO_BR()
+{
+rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido');
+ if [ "${rSEARCH}" = "j&aacute" ]; then
+    rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=$DOMAIN ].\n");
+  elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
+    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br, exiting.\n";
+   exit
+  elif [ "${rSEARCH}" = "in&iacute;cio" ];then
+    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br, exiting.\n";
+   exit
+  elif [ "${rSEARCH}" = "similar" ];then
+    echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n";
+   exit
+  else
+    echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid, exiting.\n";
+   exit
+ fi
+}
+
+# CHECK INTERNATIONAL DOMAIN #
+function INTERNATION_DOMAIN()
+{
+rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not")
+
+ if [ "${rINTER}" == "is not" ]; then
+    echo -e "\n${ATT} - ${DOMAIN} not registered, exiting.\n"; exit;
+  else
+    rINT=$(echo -e "\n${OK} - ${DOMAIN} registered. [ Whois: http://nic.com/whois?domain=$DOMAIN ]")
+ fi
+}
+
+# INIT QUERIES #
+
+echo -ne '\nPlease Wait...\n'
+
+# Verify domain EXT #
+cDOMAIN=$(echo $DOMAIN | cut -d. -f3,3)
+if [ "${cDOMAIN}" == "br" ]; then
+  REGISTRO_BR
+ else
+  INTERNATION_DOMAIN
+fi
+
+echo -ne '\nRNS -   ####                (10%)\r'
+
+# GET ROOT SERVER #
+ROOTS=$(dig DS +additional $DOMAIN | grep SOA | awk '{print $5}' | sort -dbf)
+
+# GET FIST NAMESERVER #
+SRV=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -m1 NS | awk '{print $5}' | sort -dbf)
+
+# GET IP FROM ROOTSERVER #
+IPNS=$(dig A +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | sort -dbf | grep A | awk '{print $5}')
+
+echo -ne 'NSR -   #######               (20%)\r'
+
+# CHECK ROOTSERVER #
+NAMESERVER=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -v SOA | sort -dbf)
+
+echo -ne 'DNS -   ##########            (30%)\r'
+
+# GET IP FROM WEBHOST #
+IPDNS=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$SRV | sort -dbf | grep A | awk '{print $5}')
+
+# CHECK DNS #
+NS=$(dig NS +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN @$SRV | sort -dbf)
+
+# if NS fail from query "NS" we get directly from domain
+#FAILIP=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN | sort -dbf | grep A | awk '{print $5}')
+FAILNS=$(dig NS +nostats +nocmd +nocomments +noquestion $DOMAIN | grep NS)
+
+echo -ne 'WWW -   ############          (40%)\r'
+
+# CHECK WWW FROM DOMAIN #
+A=$(dig WWW +short $DOMAIN @$SRV | sort -dbf)
+
+echo -ne 'MX -    ###############       (50%)\r'
+
+# CHECK MX #
+MX=$(dig -t MX +noall +answer $DOMAIN @$SRV | sort -dbf)
+
+echo -ne 'RVS -   #################     (60%)\r'
+
+# CHECK REVERSE #
+REVERSE=$(dig -x $A +additional +short +norec)
+
+echo -ne 'SPF -   ###################   (70%)\r'
+
+# CHECK SPF #
+SPF=$(dig TXT +short $DOMAIN @$SRV | sort -dbf)
+
+echo -ne 'DKIM -  ####################  (80%)\r'
+
+# CHECK DKIM DEFAULT #
+DKIM=$(dig -ttxt default._domainkey.$DOMAIN @$SRV +short | grep -v spf1)
+
+echo -ne 'PING -  ######################(90%)\r'
+
+# CHECK PING #
+vPING=$(ping -q -c 1 $DOMAIN >/dev/null)
+
+echo -ne "${OK} - ######################(100%)\n"
+
+# ---
+	###########################
+	### Do not modify below ###
+	###########################
+
+# NS QUERY #
+function SHOW_NS()
+{
+echo " 
+-------------------------------------------|
+			      --=== NS ===--
+-------------------------------------------|
+"
+ if [ "${NAMESERVER}" = "no" ]; then # nic.br
+    echo -e "${ATT} - Your IP has been blocked on registro.br, please try query  again within 15 minutes.\n"
+  elif [ "${NAMESERVER}" = "${ROOTS}" ] || [ -z "${NAMESERVER}" ]; then
+    echo -e "${FAIL} - Unable to obtain DNS servers of your domain. Verify that the domain exists and/or is configured correctly.\n"
+  else
+    echo -e "${OK} - NS received from your nameservers listed as parents servers on root server ${verd}${ROOTS}${rese} are:\n\n$BAR\n\n";
+      paste  <(echo "$NAMESERVER") <(echo "$IPNS");
+    echo -e "\n\n${OK}: The parent server ${verd}${ROOTS}${rese} has your nameservers listed. This is a must if you want to be found as anyone that does not know your DNS servers will first ask the parent nameservers."
+ fi
+}
+
+# NSR QUERY #
+function SHOW_DNS()
+{
+echo "
+-------------------------------------------|
+			     --=== NSR ===--
+-------------------------------------------|
+"
+ if [ -z "${NS}" ] || [ -z "${FAILNS}" ];then
+    echo -e "${FAIL} - Unable to get the nameservers directly from the server hosting.\n\n"
+  elif [ "${NS}" = "${NAMESERVER}" ] || [ ! "${FAILNS}" ]; then
+    echo -e "${OK} - NS records got from your nameservers listed at the parent NS are:\n\n$BAR\n\n"
+      paste <(echo "$NS") <(echo "$IPDNS");
+  else	
+    echo -e "${ATT} - Unable to get the nameservers directly from the hosting server, the following query is for NS directly on domain:\n\n$BAR\n\n"
+      paste <(echo "$FAILNS") <(echo "$FAILIP");
+    echo -e "${FAIL} The following nameservers are listed at your nameservers as nameservers for your domain ${DOMAIN}, but are not listed at the parent nameservers at ${ROOTS} (see $RFC2181 ). You need to make sure that these nameservers are working. If they are not working ok, you may have problems!"	
+ fi
+}	
+
+# WWW QUERY #
+function SHOW_WWW() {
+
+echo "
+-------------------------------------------|			
+			     --=== WWW ===--
+-------------------------------------------|
+"
+ if [ -z "${A}" ]; then
+    echo -e "${FAIL} - WWW value from does not seem to point to an IP.\n"
+  else
+    echo -e "${OK} - Domain points the value WWW for:\n\n${A}\n"
+ fi
+}
+
+# PING QUERY #
+function SHOW_PING()
+{
+ if ! ${vPING} ; then
+    echo -e "${FAIL} - Domain did not answer to ping.\n"
+  elif [ "${vPING}" = "${A}" ]; then
+    echo -e "${OK} - Domain is getting a return ping which answers to the same DNS server.\n"
+  else
+   echo -e "${OK} - Domain had response from ping to the IP:\n\n${A}"
+ fi
+}
+
+# MX QUERY #
+function SHOW_MX()
+{
+echo "
+-------------------------------------------|	
+			      --=== MX ===--
+-------------------------------------------|
+"
+ if [ -z "${MX}" ]; then
+    echo -e "${ATT} - Domain has no MX entry registered.\n"
+  else  
+    echo -e "${OK} - Domain points the MX to:\n\n$MXBAR\n\n${MX}\n"
+ fi
+}
+
+# REVERSE QUERY #
+function SHOW_REVERSE()
+{
+ if [ -z "${REVERSE}" ]; then
+    echo -e "${ATT} - No reverse DNS (PTR) entries for ${A}. You should contact your ISP and ask him to add a PTR record for your ips.\n"
+  else
+    echo -e "${OK} - Reverse DNS (PTR) found for: \n\n${A} -> ${REVERSE}\n"
+ fi
+}
+
+# SPF QUERY #
+function SHOW_SPF()
+{
+ if [ -z "${SPF}" ] || [ "${SPF}" = "'TXT'" ]; then
+    echo -e "${FAIL} - There are no registered SPF values.\n"
+  else
+    echo -e "${OK} - The SPF registered is:\n\n${SPF}"
+ fi
+}
+
+# DKIM QUERY
+function SHOW_DKIM()
+{
+echo "
+-------------------------------------------|
+			    --=== DKIM ===--
+-------------------------------------------|
+" 
+ if [ -z "${DKIM}" ]; then
+    echo -e "${ATT} - Default DKIM is not registered.\n"
+  else
+    echo -e "${OK} - Default DKIM registered for domain is:\n\n${DKIM}\n\m"
+ fi
+}
+
+while getopts "handwpmrkfsbi" opt; do
+  case ${opt} in
+    h)
+      SHOW_HELP
+      ;;
+     a)
+      echo $rBR
+      echo $rINT
+      SHOW_NS
+      SHOW_DNS
+      SHOW_WWW
+      SHOW_PING
+      SHOW_MX
+      SHOW_REVERSE
+      SHOW_SPF
+      SHOW_DKIM
+      ;;
+    n) SHOW_NS
+      ;;
+    d) SHOW_DNS
+      ;;
+    w) SHOW_WWW
+      ;;
+    p) SHOW_PING
+      ;;
+    m) SHOW_MX
+      ;;
+    r) SHOW_REVERSE
+      ;;
+    f) SHOW_SPF
+      ;;
+    k) SHOW_DKIM
+      ;;
+    b) echo $rBR
+     ;;
+    i) INTERNATION_DOMAIN
+     ;;
+    h) SHOW_HELP
+     ;;
+     s) echo "Query on $DATE for $DOMAIN" >> $DOMAIN.txt && for SAVE in SHOW_NS SHOW_DNS SHOW_WWW SHOW_PING SHOW_MX SHOW_REVERSE SHOW_SPF SHOW_DKIM; do ${SAVE} >> ${DOMAIN}.txt;done ; echo -e "Your file was saved on `pwd`/$DOMAIN.txt\n";
+     ;;
+        \? ) echo "Invalid option: - $opt" >&2 ;;
+        :  ) echo "Missing argument - $opt" >&2; exit 1;;
+        *  ) echo "Option not implemented: - $opt" >&2; exit 1;;
+  esac
+done
+
+shift $(($OPTIND - 1))
+                                         
+exit
+
