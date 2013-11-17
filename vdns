@@ -2,22 +2,22 @@
 #
 ##################################################################
 # Author  : Percio Andrade
-# Email	  : percio.andrade@hotmail.com.br
+# Email   : percio.andrade@hotmail.com.br
 # Info    : Shell script to consult dns and register from domain
 # Version : 1.0 ( beta )
 ##################################################################
-#
+
 # If you find any bug please, make contact.
-#
+
 
 ## INITIAL CONFIG
-uVERSION="1.0"
+VERSION="1.0"
 DATE=`date`
 DOMAIN=$2
 
 ## DOCUMENTATION
 RFC2181="http://tools.ietf.org/html/rfc2181"
-vDNS="https://github.com/percioandrade/shell/blob/master/vdns"
+vDNS="https://raw.github.com/percioandrade/shell/master/vdns"
 
 ## INDICATORS
 BAR="-- DOMAIN -------------- TTL --------- TYPE ---------- VALUE ------"
