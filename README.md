@@ -35,9 +35,9 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 		-h    |   --help      	: Shows available functions
   eg:
 
-  vdns -a domain.com
-  vdns -k domain.com
-  vdns -s domain.com
+  * vdns -a domain.com
+  * vdns -k domain.com
+  * vdns -s domain.com
 
 
 == Updates ==
