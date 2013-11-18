@@ -28,11 +28,11 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
         -r    |   --reverse     : Only return reverse
         -f    |   --spf         : Only return SPF
         -k    |   --dkim        : Only return DKIM
-	      -b    |   --br      		: Consult domain on registro.br
-        -i    |   --int     		: Consults domain o nic.com
-	      -u    |   --update      : Verify if exist update
+		-b    |   --br      	: Consult domain on registro.br
+        -i    |   --int     	: Consults domain o nic.com
+		-u    |   --update      : Verify if exist update
         -s    |   --save        : Save Query on txt file
-	      -h    |   --help      	: Shows available functions
+		-h    |   --help      	: Shows available functions
   eg:
 
   vdns -a domain.com
