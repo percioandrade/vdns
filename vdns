@@ -10,7 +10,7 @@
 # If you find any bug please, make contact.
 
 ## INITIAL CONFIG
-VERSION="1.0"
+VERSION="1.1"
 DATE=`date`
 DOMAIN=$2
 
@@ -154,12 +154,12 @@ rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" 
 ## CHECK INTERNATIONAL DOMAIN
 function INTERNATION_DOMAIN()
 {
-rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not")
+rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not in the whois database")
 
- if [ "${rINTER}" == "is not" ]; then
+ if [ "${rINTER}" == "is not in the whois database" ]; then
     echo -e "\n${ATT} - ${DOMAIN} not registered, exiting.\n"; exit;
   else
-    rINT=$(echo -e "\n${OK} - ${DOMAIN} registered. [ Whois: http://nic.com/whois?domain=$DOMAIN ]")
+    rINT=$(echo -e "\n${OK} - ${DOMAIN} registered. [ Whois: http://www.whois.com/whois/$DOMAIN ]")
  fi
 }
 
