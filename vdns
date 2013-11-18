@@ -2,9 +2,9 @@
 #
 ##################################################################
 # Author  : Percio Andrade
-# Email   : percio.andrade@hotmail.com
+# Email   : percio.andrade@hotmail.com.br
 # Info    : Shell script to consult dns and register from domain
-# Version : 1.0 ( beta )
+# Version : 1.1 ( beta )
 ##################################################################
 
 # If you find any bug please, make contact.
@@ -16,7 +16,7 @@ DOMAIN=$2
 
 ## DOCUMENTATION
 RFC2181="http://tools.ietf.org/html/rfc2181"
-vDNS="https://raw.github.com/percioandrade/shell/master/vdns"
+vDNS="https://raw.github.com/percioandrade/vdns/master/vdns"
 
 ## INDICATORS
 BAR="-- DOMAIN -------------- TTL --------- TYPE ---------- VALUE ------"
@@ -95,9 +95,9 @@ fi
 ## CHECK VERSION
 function SHOW_VERSION()
 {
-vCURL=$(curl -s $vDNS | grep -m1 "VERSION=" | cut -d '"' -f2)
- if [ $VERSION != $vCURL ]; then
-    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on $vDNS \n"
+vCURL=$(curl -s ${vDNS} | grep -m1 "VERSION=" | cut -d '"' -f2)
+ if [ "${VERSION}" != "${vCURL}" ];then
+    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on ${vDNS} \n"
   else
     echo -e "\n${OK} - Your vdns version is up to date ${verd}$VERSION${rese}\n"
  fi
