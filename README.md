@@ -44,5 +44,5 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 
 <pre>
 * 1.0 - First commit
-* 1.1 - Bug correctiom for domain search on nic.com.
+* 1.1 - Bug correction for domain search on nic.com.
 </pre>
