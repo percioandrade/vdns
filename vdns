@@ -1,16 +1,15 @@
 #!/bin/bash
-#
 ##################################################################
 # Author  : Percio Andrade
 # Email   : percio.andrade@hotmail.com.br
 # Info    : Shell script to consult dns and register from domain
-# Version : 1.1 ( beta )
+# Version : 1.2 ( beta )
 ##################################################################
 
 # If you find any bug please, make contact.
 
 ## INITIAL CONFIG
-VERSION="1.1"
+VERSION="1.2"
 DATE=`date`
 DOMAIN=$2
 
@@ -53,11 +52,11 @@ function SHOW_HELP()
         -r    |   --reverse     : Only return reverse
         -f    |   --spf         : Only return SPF
         -k    |   --dkim        : Only return DKIM
-	-b    |   --br		: Consult domain on registro.br
-        -i    |   --int		: Consults domain o nic.com
-	-u    |   --update      : Verify if exist update
+        -b    |   --br          : Consult domain on registro.br
+        -i    |   --int         : Consults domain o nic.com
+        -u    |   --update      : Verify if exist update
         -s    |   --save        : Save Query on txt file
-	-h    |   --help	: Shows available functions
+        -h    |   --help        : Shows available functions
   eg:
 
   vdns -a domain.com
@@ -77,7 +76,7 @@ echo -e "
   - RedHat: yum install dig
   - Debian: apt-get install dig
   - Arch: pacman -S dnsutils
-	"
+        "
  exit
 
   elif [ ! -f '/usr/bin/curl' ];then
@@ -88,7 +87,7 @@ echo -e "
   - RedHat: yum install curl
   - Debian: apt-get install curl
   - Arch: pacman -S curl
-	"
+        "
  exit
 fi
 
@@ -119,10 +118,9 @@ if [ -z "$1" ];then
 fi
 
 ## DOMAIN CHECK
-if [ -z "$2" ]; then
+if [ -z "$2" ];then
     echo "Please inform a domain, use -h for help information."
   exit
-fi
 
 echo -e "
 ###########################################
@@ -133,20 +131,28 @@ echo -e "
 ## CHECK BR DOMAIN # 
 function REGISTRO_BR()
 {
-rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido');
- if [ "${rSEARCH}" = "j&aacute" ]; then
-    rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=$DOMAIN ].\n");
+
+# rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido'); # OLD 1.0
+
+rSEARCH=$(curl -H "charset=iso-8859-1" -s https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida');
+ if [ "${rSEARCH}" = "j&aacute" ];then
+    rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=${DOMAIN} ].\n");
   elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
-    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br, exiting.\n";
+    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n";
    exit
   elif [ "${rSEARCH}" = "in&iacute;cio" ];then
-    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br, exiting.\n";
+    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n";
    exit
   elif [ "${rSEARCH}" = "similar" ];then
     echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n";
    exit
+  elif [ "${rSEARCH}" = "negada" ];then
+    echo -e "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"
+  elif [ "${rSEARCH}" = "inv&aacute;lida" ];then
+    echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n";
+   exit
   else
-    echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid, exiting.\n";
+    echo -e "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"   
    exit
  fi
 }
@@ -236,9 +242,9 @@ echo -ne "${OK} - ######################(100%)\n"
 
 
 
-	###########################
-	### DO NOT MODIFY BELOW ###
-	###########################
+        ###########################
+        ### DO NOT MODIFY BELOW ###
+        ###########################
 
 
 
@@ -247,7 +253,7 @@ function SHOW_NS()
 {
 echo " 
 -------------------------------------------|
-			      --=== NS ===--
+                              --=== NS ===--
 -------------------------------------------|
 "
  if [ "${NAMESERVER}" = "no" ]; then # nic.br
@@ -266,7 +272,7 @@ function SHOW_DNS()
 {
 echo "
 -------------------------------------------|
-			     --=== NSR ===--
+                             --=== NSR ===--
 -------------------------------------------|
 "
  if [ -z "${NS}" ] || [ -z "${FAILNS}" ];then
@@ -274,19 +280,19 @@ echo "
   elif [ "${NS}" = "${NAMESERVER}" ] || [ ! "${FAILNS}" ]; then
     echo -e "${OK} - NS records got from your nameservers listed at the parent NS are:\n\n$BAR\n\n"
       paste <(echo "$NS") <(echo "$IPDNS");
-  else	
+  else
     echo -e "${ATT} - Unable to get the nameservers directly from the hosting server, the following query is for NS directly on domain:\n\n$BAR\n\n"
       paste <(echo "$FAILNS") <(echo "$FAILIP");
-    echo -e "${FAIL} The following nameservers are listed at your nameservers as nameservers for your domain ${DOMAIN}, but are not listed at the parent nameservers at ${ROOTS} (see $RFC2181 ). You need to make sure that these nameservers are working. If they are not working ok, you may have problems!"	
+    echo -e "${FAIL} The following nameservers are listed at your nameservers as nameservers for your domain ${DOMAIN}, but are not listed at the parent nameservers at ${ROOTS} (see $RFC2181 ). You need to make sure that these nameservers are working. If they are not working ok, you may have problems!"
  fi
-}	
+}
 
 ## WWW QUERY
 function SHOW_WWW()
 {
 echo "
--------------------------------------------|			
-			     --=== WWW ===--
+-------------------------------------------|
+                             --=== WWW ===--
 -------------------------------------------|
 "
  if [ -z "${A}" ]; then
@@ -312,8 +318,8 @@ function SHOW_PING()
 function SHOW_MX()
 {
 echo "
--------------------------------------------|	
-			      --=== MX ===--
+-------------------------------------------|
+                              --=== MX ===--
 -------------------------------------------|
 "
  if [ -z "${MX}" ]; then
@@ -348,7 +354,7 @@ function SHOW_DKIM()
 {
 echo "
 -------------------------------------------|
-			    --=== DKIM ===--
+                            --=== DKIM ===--
 -------------------------------------------|
 " 
  if [ -z "${DKIM}" ]; then
