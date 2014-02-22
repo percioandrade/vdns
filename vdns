@@ -92,8 +92,7 @@ echo -e "
 fi
 
 ## CHECK VERSION
-function SHOW_VERSION()
-{
+function SHOW_VERSION(){
 vCURL=$(curl -s ${vDNS} | grep -m1 "VERSION=" | cut -d '"' -f2)
  if [ "${VERSION}" != "${vCURL}" ];then
     echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on ${vDNS} \n"
@@ -121,6 +120,7 @@ fi
 if [ -z "$2" ];then
     echo "Please inform a domain, use -h for help information."
   exit
+fi
 
 echo -e "
 ###########################################
@@ -128,33 +128,39 @@ echo -e "
 ###########################################
 "
 
-## CHECK BR DOMAIN # 
-function REGISTRO_BR()
-{
-
+## CHECK BR DOMAIN
+function REGISTRO_BR(){
 # rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido'); # OLD 1.0
 
-rSEARCH=$(curl -H "charset=iso-8859-1" -s https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida');
- if [ "${rSEARCH}" = "j&aacute" ];then
-    rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=${DOMAIN} ].\n");
+rSEARCH=$(curl -s https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o "dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida");
+ 
+  if [ "${rSEARCH}" = "j&aacute" ];then
+  
+  rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=${DOMAIN} ].\n");
+  
   elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
-    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n";
+    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n"
    exit
+  
   elif [ "${rSEARCH}" = "in&iacute;cio" ];then
-    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n";
+    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n"
    exit
+  
   elif [ "${rSEARCH}" = "similar" ];then
-    echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n";
+    echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n"
    exit
+  
   elif [ "${rSEARCH}" = "negada" ];then
     echo -e "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"
+  
   elif [ "${rSEARCH}" = "inv&aacute;lida" ];then
-    echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n";
+     echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n"
    exit
+  
   else
     echo -e "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"   
-   exit
- fi
+   exit 
+fi
 }
 
 ## CHECK INTERNATIONAL DOMAIN
@@ -173,11 +179,11 @@ rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not in the wh
 
 echo -ne '\nPlease Wait...\n'
 
-# Verify domain EXT #
+# Verify domain EXT
 cDOMAIN=$(echo $DOMAIN | cut -d. -f3,3)
-if [ "${cDOMAIN}" == "br" ]; then
+if [ "${cDOMAIN}" == "br" ];then
   REGISTRO_BR
- else
+else
   INTERNATION_DOMAIN
 fi
 
@@ -249,8 +255,7 @@ echo -ne "${OK} - ######################(100%)\n"
 
 
 ## NS QUERY
-function SHOW_NS()
-{
+function SHOW_NS(){
 echo " 
 -------------------------------------------|
                               --=== NS ===--
@@ -268,8 +273,7 @@ echo "
 }
 
 ## NSR QUERY
-function SHOW_DNS()
-{
+function SHOW_DNS(){
 echo "
 -------------------------------------------|
                              --=== NSR ===--
@@ -288,14 +292,13 @@ echo "
 }
 
 ## WWW QUERY
-function SHOW_WWW()
-{
+function SHOW_WWW(){
 echo "
 -------------------------------------------|
                              --=== WWW ===--
 -------------------------------------------|
 "
- if [ -z "${A}" ]; then
+ if [ -z "${A}" ];then
     echo -e "${FAIL} - WWW value from does not seem to point to an IP.\n"
   else
     echo -e "${OK} - Domain points the value WWW for:\n\n${A}\n"
@@ -303,9 +306,8 @@ echo "
 }
 
 ## PING QUERY
-function SHOW_PING()
-{
- if ! ${vPING} ; then
+function SHOW_PING(){
+ if ! ${vPING};then
     echo -e "${FAIL} - Domain did not answer to ping.\n"
   elif [ "${vPING}" = "${A}" ]; then
     echo -e "${OK} - Domain is getting a return ping which answers to the same DNS server.\n"
@@ -315,14 +317,13 @@ function SHOW_PING()
 }
 
 ## MX QUERY
-function SHOW_MX()
-{
+function SHOW_MX(){
 echo "
 -------------------------------------------|
                               --=== MX ===--
 -------------------------------------------|
 "
- if [ -z "${MX}" ]; then
+ if [ -z "${MX}" ];then
     echo -e "${ATT} - Domain has no MX entry registered.\n"
   else  
     echo -e "${OK} - Domain points the MX to:\n\n$MXBAR\n\n${MX}\n"
@@ -330,9 +331,8 @@ echo "
 }
 
 ## REVERSE QUERY
-function SHOW_REVERSE()
-{
- if [ -z "${REVERSE}" ]; then
+function SHOW_REVERSE(){
+ if [ -z "${REVERSE}" ];then
     echo -e "${ATT} - No reverse DNS (PTR) entries for ${A}. You should contact your ISP and ask him to add a PTR record for your ips.\n"
   else
     echo -e "${OK} - Reverse DNS (PTR) found for: \n\n${A} -> ${REVERSE}\n"
@@ -340,8 +340,7 @@ function SHOW_REVERSE()
 }
 
 ## SPF QUERY
-function SHOW_SPF()
-{
+function SHOW_SPF(){
  if [ -z "${SPF}" ] || [ "${SPF}" = "'TXT'" ]; then
     echo -e "${FAIL} - There are no registered SPF values.\n"
   else
@@ -357,7 +356,7 @@ echo "
                             --=== DKIM ===--
 -------------------------------------------|
 " 
- if [ -z "${DKIM}" ]; then
+ if [ -z "${DKIM}" ];then
     echo -e "${ATT} - Default DKIM is not registered.\n"
   else
     echo -e "${OK} - Default DKIM registered for domain is:\n\n${DKIM}\n\m"
