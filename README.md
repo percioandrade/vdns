@@ -45,4 +45,9 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 <pre>
 * 1.0 - First commit
 * 1.1 - Bug correction for domain search on nic.com.
+* 1.2 - Bug correction for query domains
+* 1.3 - Update script to registro.br 2.0
+*     - Added .es domain to check ( no public whois on this time )
+*     - Correction to domain check
+*     - Added webproxy for whois block on registro.br
 </pre>
