@@ -3,13 +3,13 @@
 # Author  : Percio Andrade
 # Email   : percio.andrade@hotmail.com.br
 # Info    : Shell script to consult dns and register from domain
-# Version : 1.2 ( beta )
+# Version : 1.3 ( beta )
 ##################################################################
 
 # If you find any bug please, make contact.
 
 ## INITIAL CONFIG
-VERSION="1.2"
+VERSION="1.3"
 DATE=`date`
 DOMAIN=$2
 
@@ -36,8 +36,7 @@ ATT="${amar}[!]${rese}";
 FAIL="${verm}[!]${rese}";
 
 ## HELP INFO
-function SHOW_HELP()
-{
+function SHOW_HELP(){
   echo "
   usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]
 
@@ -64,11 +63,9 @@ function SHOW_HELP()
   vdns -s domain.com
        "
   exit
-
 }
 
-
-## CHECK DEPENDECIES
+## CHECK DEPENDECIES -
 if [ ! -f '/usr/bin/dig' ];then
 echo -e "
   ${FAIL} - The application ${amar}dig${rese} is not installed on your computer, please install in order to run this script:
@@ -122,52 +119,60 @@ if [ -z "$2" ];then
   exit
 fi
 
+## INIT QUERIES
+
+echo -ne '\nPlease Wait...\n'
+
 echo -e "
 ###########################################
 - DNS info for: ${DOMAIN}
 ###########################################
 "
 
-## CHECK BR DOMAIN
+function WHOIS_REGISTRO_BR(){
+CURLWHOISBR=$(curl -s https://registro.br/cgi-bin/whois/?qr=${DOMAIN}|grep -o 'negada')
+  if [ "$CURLWHOISBR" = "negada" ];then
+   echo "http://www.webproxy.net/view?q=https://registro.br/cgi-bin/whois/?qr=${DOMAIN}"
+  else
+   echo "https://registro.br/cgi-bin/whois/?qr=${DOMAIN}"
+ fi
+}
+
 function REGISTRO_BR(){
-# rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/ | egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido'); # OLD 1.0
+# rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/|egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido'); # OLD 1.0
 
 rSEARCH=$(curl -s https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o "dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida");
- 
-  if [ "${rSEARCH}" = "j&aacute" ];then
+if [ "${rSEARCH}" = "j&aacute" ];then
   
-  rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: https://registro.br/cgi-bin/whois/?qr=${DOMAIN} ].\n");
+rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: `WHOIS_REGISTRO_BR` ].\n")
   
-  elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
-    echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n"
-   exit
+elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
+  echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n"
+exit
   
-  elif [ "${rSEARCH}" = "in&iacute;cio" ];then
-    echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n"
-   exit
+elif [ "${rSEARCH}" = "in&iacute;cio" ];then
+  echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n"
+exit
   
-  elif [ "${rSEARCH}" = "similar" ];then
-    echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n"
-   exit
+elif [ "${rSEARCH}" = "similar" ];then
+  echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n"
+exit
   
-  elif [ "${rSEARCH}" = "negada" ];then
-    echo -e "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"
+elif [ "${rSEARCH}" = "negada" ];then
+  echo -e "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR` .\n"
   
-  elif [ "${rSEARCH}" = "inv&aacute;lida" ];then
-     echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n"
-   exit
+elif [ "${rSEARCH}" = "inv&aacute;lida" ];then
+   echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n"
+exit
   
-  else
-    echo -e "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in https://registro.br/cgi-bin/whois/?qr=${DOMAIN} .\n"   
-   exit 
+else
+  echo -e "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR` .\n"
+ exit 
 fi
 }
 
-## CHECK INTERNATIONAL DOMAIN
-function INTERNATION_DOMAIN()
-{
-rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not in the whois database")
-
+function INTERNATION_DOMAIN(){
+rINTER=$(curl -s http://nic.com/whois?domain=${DOMAIN}|grep -o "is not in the whois database")
  if [ "${rINTER}" == "is not in the whois database" ]; then
     echo -e "\n${ATT} - ${DOMAIN} not registered, exiting.\n"; exit;
   else
@@ -175,16 +180,16 @@ rINTER=$(curl -s http://nic.com/whois?domain=$DOMAIN | grep -o "is not in the wh
  fi
 }
 
-## INIT QUERIES
 
-echo -ne '\nPlease Wait...\n'
+## TDL CHECK
 
-# Verify domain EXT
-cDOMAIN=$(echo $DOMAIN | cut -d. -f3,3)
-if [ "${cDOMAIN}" == "br" ];then
-  REGISTRO_BR
+cDOMAIN=$(echo ${DOMAIN} | grep . | cut -d. -f1)
+if [ "${DOMAIN}" = "${cDOMAIN}.com.br" ];then
+        REGISTRO_BR
+elif [ "${DOMAIN}" = "${cDOMAIN}.es" ]; then
+        echo "Spanish Domain doens't have Whois database."
 else
-  INTERNATION_DOMAIN
+        INTERNATION_DOMAIN
 fi
 
 echo -ne '\nRNS -   ####                (10%)\r'
@@ -396,9 +401,9 @@ while getopts "handwpmrkfsbi" opt; do
       ;;
     k) SHOW_DKIM
       ;;
-    b) echo $rBR
+    b) echo $rBR 
      ;;
-    i) INTERNATION_DOMAIN
+    i) echo $rINT
      ;;
     h) SHOW_HELP
      ;;
