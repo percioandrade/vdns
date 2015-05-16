@@ -19,6 +19,7 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 
   Options:
 
+<pre>
 -a    |   --all         : Full DNS lookup
 -n    |   --ns          : Only return servers NS
 -d    |   --dns         : Only return servers NSR
@@ -35,12 +36,13 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 -h    |   --help      	: Shows available functions
 -B    |   --bind        : Print Query on bind format
 -o    |   --office      : Print MX from Outlook
+
   eg:
 
   * vdns -a domain.com
   * vdns -k domain.com
   * vdns -s domain.com
-
+</pre>
 
 == Updates ==
 
