@@ -19,22 +19,22 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 
   Options:
 
-        -a    |   --all         : Full DNS lookup
-        -n    |   --ns          : Only return servers NS
-        -d    |   --dns         : Only return servers NSR
-        -w    |   --www         : Only return WWW
-        -p    |   --ping        : Only return ping check on WWW
-        -m    |   --mx          : Only return MX
-        -r    |   --reverse     : Only return reverse
-        -f    |   --spf         : Only return SPF
-        -k    |   --dkim        : Only return DKIM
-	-b    |   --br      	: Consult domain on registro.br
-        -i    |   --int     	: Consults domain o nic.com
-	-u    |   --update      : Verify if exist update
-        -s    |   --save        : Save Query on txt file
-	-h    |   --help      	: Shows available functions
-	-b    |   --bind        : Print Query on bind format
-        -o    |   --office      : Print MX from Outlook
+-a    |   --all         : Full DNS lookup
+-n    |   --ns          : Only return servers NS
+-d    |   --dns         : Only return servers NSR
+-w    |   --www         : Only return WWW
+-p    |   --ping        : Only return ping check on WWW
+-m    |   --mx          : Only return MX
+-r    |   --reverse     : Only return reverse
+-f    |   --spf         : Only return SPF
+-k    |   --dkim        : Only return DKIM
+-b    |   --br      	: Consult domain on registro.br
+-i    |   --int     	: Consults domain o nic.com
+-u    |   --update      : Verify if exist update
+-s    |   --save        : Save Query on txt file
+-h    |   --help      	: Shows available functions
+-B    |   --bind        : Print Query on bind format
+-o    |   --office      : Print MX from Outlook
   eg:
 
   * vdns -a domain.com
