@@ -1,25 +1,19 @@
 #!/bin/bash
 ##################################################################
 # Author  : Percio Andrade
-# Email   : percio.andrade@hotmail.com.br
+# Email   : percio.andrade@hostgator.com.br
 # Info    : Shell script to consult dns and register from domain
-# Version : 1.3 ( beta )
+# Version : 1.4 ( beta )
 ##################################################################
 
-# If you find any bug please, make contact.
+# If you find any bug please report.
 
 ## INITIAL CONFIG
 VERSION="1.3"
 DATE=`date`
 DOMAIN=$2
 
-## DOCUMENTATION
-RFC2181="http://tools.ietf.org/html/rfc2181"
-vDNS="https://raw.github.com/percioandrade/vdns/master/vdns"
-
-## INDICATORS
-BAR="-- DOMAIN -------------- TTL --------- TYPE ---------- VALUE ------"
-MXBAR="-- DOMAIN -------------- TTL --------- TYPE --- PTY --- VALUE ------"
+vDNS="#"
 
 ## BASHCSS
 pret='\E[0;30m'   # Black
@@ -30,32 +24,36 @@ azul='\E[0;34m'   # Blue
 mage='\E[0;35m'   # Magenta
 cian='\E[0;36m'   # Ciano
 bran='\E[0;37m'   # White
+bold='\033[37;4;1m' #BOLD
+und='\033[37;4m'
 rese=$(tput sgr0) # No color.
-OK="${verd}[OK]${rese}";
-ATT="${amar}[!]${rese}";
-FAIL="${verm}[!]${rese}";
-
-## HELP INFO
-function SHOW_HELP(){
-  echo "
-  usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]
-
-  Options:
-
-        -a    |   --all         : Full DNS lookup
-        -n    |   --ns          : Only return servers NS
-        -d    |   --dns         : Only return servers NSR
-        -w    |   --www         : Only return WWW
-        -p    |   --ping        : Only return ping check on WWW
-        -m    |   --mx          : Only return MX
-        -r    |   --reverse     : Only return reverse
-        -f    |   --spf         : Only return SPF
-        -k    |   --dkim        : Only return DKIM
-        -b    |   --br          : Consult domain on registro.br
-        -i    |   --int         : Consults domain o nic.com
-        -u    |   --update      : Verify if exist update
-        -s    |   --save        : Save Query on txt file
+OK="${verd}[OK]${rese}";                                                                                                                                                                                                                                                    
+ATT="${amar}[!]${rese}";                                                                                                                                                                                                                                                    
+FAIL="${verm}[!]${rese}";                                                                                                                                                                                                                                                   
+                                                                                                                                                                                                                                                                            
+## HELP INFO                                                                                                                                                                                                                                                                
+function SHOW_HELP(){                                                                                                                                                                                                                                                       
+printf "                                                                                                                                                                                                                                                                    
+  usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]                                                                                                                                                          
+                                                                                                                                                                                                                                                                            
+  Options:                                                                                                                                                                                                                                                                  
+                                                                                                                                                                                                                                                                            
+        -a    |   --all         : Full DNS lookup                                                                                                                                                                                                                           
+        -n    |   --ns          : Only return servers NS                                                                                                                                                                                                                    
+        -d    |   --dns         : Only return servers NSR                                                                                                                                                                                                                   
+        -w    |   --www         : Only return WWW                                                                                                                                                                                                                           
+        -p    |   --ping        : Only return ping check on WWW                                                                                                                                                                                                             
+        -m    |   --mx          : Only return MX                                                                                                                                                                                                                            
+        -r    |   --reverse     : Only return reverse                                                                                                                                                                                                                       
+        -f    |   --spf         : Only return SPF                                                                                                                                                                                                                           
+        -k    |   --dkim        : Only return DKIM                                                                                                                                                                                                                          
+        -b    |   --br          : Consult domain on registro.br                                                                                                                                                                                                             
+        -i    |   --int         : Consults domain o nic.com                                                                                                                                                                                                                 
+        -u    |   --update      : Verify if exist update                                                                                                                                                                                                                    
+        -s    |   --save        : Save Query on txt file                                                                                                                                                                                                                    
         -h    |   --help        : Shows available functions
+        -b    |   --bind        : Print Query on bind format
+        -o    |   --office      : Print MX from Outlook
   eg:
 
   vdns -a domain.com
@@ -65,356 +63,353 @@ function SHOW_HELP(){
   exit
 }
 
-## CHECK DEPENDECIES -
-if [ ! -f '/usr/bin/dig' ];then
-echo -e "
-  ${FAIL} - The application ${amar}dig${rese} is not installed on your computer, please install in order to run this script:
-  
-  - RedHat: yum install dig
-  - Debian: apt-get install dig
-  - Arch: pacman -S dnsutils
-        "
- exit
-
-  elif [ ! -f '/usr/bin/curl' ];then
-
-echo -e "
-  ${FAIL} - The application ${amar}curl${rese} is not not installed on your computer, please install in order to run this script:
-
-  - RedHat: yum install curl
-  - Debian: apt-get install curl
-  - Arch: pacman -S curl
-        "
- exit
-fi
-
 ## CHECK VERSION
 function SHOW_VERSION(){
-vCURL=$(curl -s ${vDNS} | grep -m1 "VERSION=" | cut -d '"' -f2)
- if [ "${VERSION}" != "${vCURL}" ];then
-    echo -e "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on ${vDNS} \n"
-  else
-    echo -e "\n${OK} - Your vdns version is up to date ${verd}$VERSION${rese}\n"
- fi
+vCURL=$(GET ${vDNS}|grep -m1 "VERSION="|cut -d '"' -f2)
+if [[ ${VERSION} != ${vCURL} ]]
+then
+        printf "\n${ATT} - Is there a new update for vdns. Version ${verm}$vCURL${rese}, please update on ${vDNS}\n"
+else
+        printf "\n${OK} - Your vdns version is up to date ${verd}$VERSION${rese}\n\n"
+fi
 }
 
 ## ARGUMENT CHECK
-if [ -z "$1" ];then
-  echo "No arguments parsed, use -h for help information."
-   exit
- elif [ "$1" = "-u" ];then
-     SHOW_VERSION
-   exit  
- elif [ "$1" = "-h" ];then
-     SHOW_HELP
-   exit
- elif [ "$1" = "-" ];then
-   echo "Incorrect argument, please use -h for hel information."
-   exit
+if [[ -z $1 ]]
+then
+        printf "\nNo arguments parsed, use -h for help information.\n\n"
+        exit
+elif [[ "$1" = "-u" ]]
+then
+        SHOW_VERSION
+        exit
+elif [[ "$1" = "-h" ]]
+then
+        SHOW_HELP
+        exit
+elif [[ "$1" = "-" ]]
+then
+        printf "\nIncorrect argument, please use -h for hel information.\n\n"
+        exit
 fi
 
 ## DOMAIN CHECK
-if [ -z "$2" ];then
-    echo "Please inform a domain, use -h for help information."
-  exit
+if [[ -z "$2" ]]
+then
+        printf "\nPlease inform a domain, use -h for help information.\n\n"
+        exit
 fi
 
 ## INIT QUERIES
-
-echo -ne '\nPlease Wait...\n'
-
-echo -e "
-###########################################
-- DNS info for: ${DOMAIN}
-###########################################
-"
+printf "\nDNS info for: ${DOMAIN}\n"
 
 function WHOIS_REGISTRO_BR(){
-CURLWHOISBR=$(curl -s https://registro.br/cgi-bin/whois/?qr=${DOMAIN}|grep -o 'negada')
-  if [ "$CURLWHOISBR" = "negada" ];then
-   echo "http://www.webproxy.net/view?q=https://registro.br/cgi-bin/whois/?qr=${DOMAIN}"
-  else
-   echo "https://registro.br/cgi-bin/whois/?qr=${DOMAIN}"
- fi
+CURLWHOISBR=$(GET https://registro.br/cgi-bin/whois/?qr=${DOMAIN}|grep -o 'negada')
+if [[ $CURLWHOISBR = negada ]]
+then
+        printf "http://www.webproxy.net/view?q=https://registro.br/cgi-bin/whois/?qr=${DOMAIN}\n"
+else
+        printf "https://registro.br/cgi-bin/whois/?qr=${DOMAIN}\n"
+fi
 }
 
 function REGISTRO_BR(){
-# rSEARCH=$(curl -H "charset=iso-8859-1" -s --data "qr=${DOMAIN}&botao=PESQUISAR" https://registro.br/cgi-bin/avail/|egrep -o 'dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lido'); # OLD 1.0
 
-rSEARCH=$(curl -s https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o "dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida");
-if [ "${rSEARCH}" = "j&aacute" ];then
-  
-rBR=$(echo -e "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: `WHOIS_REGISTRO_BR` ].\n")
-  
-elif [ "${rSEARCH}" = "dispon&iacute;vel" ];then
-  echo -e "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n"
-exit
-  
-elif [ "${rSEARCH}" = "in&iacute;cio" ];then
-  echo -e "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n"
-exit
-  
-elif [ "${rSEARCH}" = "similar" ];then
-  echo -e "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n"
-exit
-  
-elif [ "${rSEARCH}" = "negada" ];then
-  echo -e "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR` .\n"
-  
-elif [ "${rSEARCH}" = "inv&aacute;lida" ];then
-   echo -e "\n${FAIL} - This domain ${DOMAIN} is invalid.\n"
-exit
-  
+rSEARCH=$(GET https://registro.br/cgi-bin/avail/?qr=${DOMAIN}|egrep -o "500|dispon&iacute;vel|j&aacute|in&iacute;cio|similar|inv&aacute;lida");
+if [[ ${rSEARCH} = "j&aacute" ]]
+then
+
+#printf "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: `WHOIS_REGISTRO_BR` ]\n\n"
+rBR=$(printf "\n${OK} - ${DOMAIN} was registered on registro.br. [ Whois: `WHOIS_REGISTRO_BR` ].\n")
+
+elif [[ ${rSEARCH} = "dispon&iacute;vel" ]]
+then
+        printf "\n${ATT} - ${DOMAIN} avaible for registration on registro.br.\n"
+        exit
+elif [[  ${rSEARCH} = "500" ]];
+then    printf "\n${ATT} - That IP `hostname -i` was blocked on registro.br.\n\n";
+        exit
+
+elif [[ ${rSEARCH} = "in&iacute;cio" ]]
+then
+        printf "\n${ATT} - ${DOMAIN} is waiting for liberation on registro.br.\n"
+        exit
+elif [[ ${rSEARCH} = similar ]]
+then
+        printf "\n${ATT} - ${DOMAIN} is already registered under similar syntax.\n"
+        exit
+elif [[ ${rSEARCH} = negada ]]
+then
+        printf "\n${FAIL} - Your IP was blocked on registro.br, cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR}` .\n\n"
+elif [[ ${rSEARCH} = "inv&aacute;lida" ]]
+then
+        printf "\n${FAIL} - This domain ${DOMAIN} is invalid.\n"
+        exit
 else
-  echo -e "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR` .\n"
- exit 
+        printf "\n${FAIL} - Cannot retrieve whois information. You can browser manualy in `WHOIS_REGISTRO_BR` .\n\n"
+        exit
 fi
 }
 
 function INTERNATION_DOMAIN(){
-rINTER=$(curl -s http://nic.com/whois?domain=${DOMAIN}|grep -o "is not in the whois database")
- if [ "${rINTER}" == "is not in the whois database" ]; then
-    echo -e "\n${ATT} - ${DOMAIN} not registered, exiting.\n"; exit;
-  else
-    rINT=$(echo -e "\n${OK} - ${DOMAIN} registered. [ Whois: http://www.whois.com/whois/$DOMAIN ]")
- fi
+rINTER=$(GET http://nic.com/whois?domain=${DOMAIN}|grep -o "is not in the whois database")
+if [[ ${rINTER} == "is not in the whois database" ]]
+then
+       printf "\n${ATT} - ${DOMAIN} not registered, exiting.\n\n"
+       exit
+else
+        #printf "\n${OK} - ${DOMAIN} registered. [ Whois: http://www.whois.com/whois/$DOMAIN ]"
+        rINT=$(echo -e "\n${OK} - ${DOMAIN} registered. [ Whois: http://www.whois.com/whois/$DOMAIN ]")
+fi
 }
 
-
 ## TDL CHECK
-
-cDOMAIN=$(echo ${DOMAIN} | grep . | cut -d. -f1)
-if [ "${DOMAIN}" = "${cDOMAIN}.com.br" ];then
+cDOMAIN=$(echo ${DOMAIN}|grep .|cut -d. -f1)
+if [[ ${DOMAIN} = "${cDOMAIN}.com.br" ]]||[[ ${DOMAIN} = "${cDOMAIN}.br" ]]
+then
         REGISTRO_BR
-elif [ "${DOMAIN}" = "${cDOMAIN}.es" ]; then
-        echo "Spanish Domain doens't have Whois database."
+elif [[ ${DOMAIN} = "${cDOMAIN}.es" ]]
+then
+        printf "Spanish Domain doens't have Whois database."
 else
         INTERNATION_DOMAIN
 fi
 
-echo -ne '\nRNS -   ####                (10%)\r'
+echo -ne 'RNS    #                                                          (1%) Starting\r'
 
 ## GET ROOT SERVER
-ROOTS=$(dig DS +additional $DOMAIN | grep SOA | awk '{print $5}' | sort -dbf)
+ROOTS=$(dig DS +additional $DOMAIN|grep SOA|awk '{print $5}'|sort -dbf)
+
+echo -ne 'RNS    #####                                                      (10%) Geting first NS from root server\r'
 
 ## GET FIST NAMESERVER
-SRV=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -m1 NS | awk '{print $5}' | sort -dbf)
+SRV=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS|grep -m1 NS|awk '{print $5}'|sort -dbf)
+
+echo -ne 'RNS    ##########                                                 (15%) Geting IP from RootServer\r'
 
 ## GET IP FROM ROOTSERVER
-IPNS=$(dig A +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | sort -dbf | grep A | awk '{print $5}')
+IPNS=$(dig A +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS|sort -dbf|grep A|awk '{print $5}')
 
-echo -ne 'NSR -   #######               (20%)\r'
+echo -ne 'NSR    ##############                                             (20%) Start the first consult on NS\r'
 
 ## CHECK ROOTSERVER
-NAMESERVER=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS | grep -v SOA | sort -dbf)
+NAMESERVER=$(dig CNAME +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$ROOTS|grep -v SOA|sort -dbf)
 
-echo -ne 'DNS -   ##########            (30%)\r'
+echo -ne 'DNS    ##################                                         (25%) Dig IP from Webhost\r'
 
 ## GET IP FROM WEBHOST
-IPDNS=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$SRV | sort -dbf | grep A | awk '{print $5}')
+IPDNS=$(dig NS +noquestion +nocomments +nocmd +nostats +norec $DOMAIN. @$SRV|sort -dbf|grep A|awk '{print $5}')
+
+echo -ne 'DNS    #######################                                    (30%) Lets talk with webhost at this time\r'
 
 ## CHECK DNS
-NS=$(dig NS +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN @$SRV | sort -dbf)
+NS=$(dig NS +noadditional +noquestion +nocomments +nocmd +nostats +norec $DOMAIN @$SRV|sort -dbf)
 
 ## If NS fail from query "NS" we get directly from domain
-FAILNS=$(dig NS +nostats +nocmd +nocomments +noquestion $DOMAIN | grep NS)
+FAILNS=$(dig NS +nostats +nocmd +nocomments +noquestion $DOMAIN|grep NS)
 
-echo -ne 'WWW -   ############          (40%)\r'
+echo -ne 'WWW    ############################                               (35%) OK i will get now the IP value from WWW\r'
 
 ## CHECK WWW FROM DOMAIN
-A=$(dig WWW +short $DOMAIN @$SRV | sort -dbf)
+A=$(dig WWW +short $DOMAIN @$SRV|sort -dbf)
 
-echo -ne 'MX -    ###############       (50%)\r'
+echo -ne 'MX     ################################                           (40%) Nice, checking MX\r'
 
 ## CHECK MX
-MX=$(dig -t MX +noall +answer $DOMAIN @$SRV | sort -dbf)
+MX=$(dig -t MX +noall +answer $DOMAIN @$SRV|sort -dbf)
 
-echo -ne 'RVS -   #################     (60%)\r'
+echo -ne 'RVS    #####################################                      (45%) Checking reverse IP from WWW\r'
 
 ## CHECK REVERSE
 REVERSE=$(dig -x $A +additional +short +norec)
 
-echo -ne 'SPF -   ###################   (70%)\r'
+echo -ne 'SPF    ##########################################                 (50%) And now checking SPF\r'
 
 ## CHECK SPF
-SPF=$(dig TXT +short $DOMAIN @$SRV | sort -dbf)
+SPF=$(dig TXT +short $DOMAIN @$SRV|sort -dbf)
 
-echo -ne 'DKIM -  ####################  (80%)\r'
+echo -ne 'DKIM   ###############################################            (55%) Do you have dkim ?\r'
 
 ## CHECK DKIM DEFAULT
-DKIM=$(dig -ttxt default._domainkey.$DOMAIN @$SRV +short | grep -v spf1)
+DKIM=$(dig -ttxt default._domainkey.$DOMAIN @$SRV +short|grep -v spf1)
 
-echo -ne 'PING -  ######################(90%)\r'
+## CHECK OFFICE
+
+echo -ne 'OFFICE ####################################################       (60%) Let me check if have addons\r'
+
+OFFICE=$(dig srv _sipfederationtls._tcp.${DOMAIN} +short)
+OFFICE2=$(dig srv _sip._tls.${DOMAIN} +short)
+
+echo -ne 'PING   ########################################################   (90%) Ping pong ping pong\r'
 
 ## CHECK PING
 vPING=$(ping -q -c 1 $DOMAIN >/dev/null)
 
-echo -ne "${OK} - ######################(100%)\n"
-
-
+echo -ne '${OK} ############################################################(100%) All done\r'
 
         ###########################
         ### DO NOT MODIFY BELOW ###
         ###########################
 
-
+clear
 
 ## NS QUERY
 function SHOW_NS(){
-echo " 
--------------------------------------------|
-                              --=== NS ===--
--------------------------------------------|
-"
- if [ "${NAMESERVER}" = "no" ]; then # nic.br
-    echo -e "${ATT} - Your IP has been blocked on registro.br, please try query  again within 15 minutes.\n"
-  elif [ "${NAMESERVER}" = "${ROOTS}" ] || [ -z "${NAMESERVER}" ]; then
-    echo -e "${FAIL} - Unable to obtain DNS servers of your domain. Verify that the domain exists and/or is configured correctly.\n"
-  else
-    echo -e "${OK} - NS received from your nameservers listed as parents servers on root server ${verd}${ROOTS}${rese} are:\n\n$BAR\n\n";
-      paste  <(echo "$NAMESERVER") <(echo "$IPNS");
-    echo -e "\n\n${OK}: The parent server ${verd}${ROOTS}${rese} has your nameservers listed. This is a must if you want to be found as anyone that does not know your DNS servers will first ask the parent nameservers."
- fi
+printf "${und}---- NS --------------${rese}\n"
+if [[ ${NAMESERVER} = no ]]
+then # nic.br
+        printf "${ATT} - Your IP has been blocked on registro.br, please try query  again within 15 minutes.\n"
+elif [[ ${NAMESERVER} = ${ROOTS} ]]||[[ -z ${NAMESERVER} ]]
+then
+        printf "\n${FAIL} - Unable to obtain DNS servers of your domain. Verify that the domain exists and/or is configured correctly."
+else
+        printf "\n${OK} - NS received from your nameservers listed as parents servers on root server ${verd}${ROOTS}${rese} are:\n";
+        paste  <(echo "$NAMESERVER") <(echo "$IPNS");
+        printf "\n${OK}: The parent server ${verd}${ROOTS}${rese} has your nameservers listed."
+fi
 }
+
 
 ## NSR QUERY
 function SHOW_DNS(){
-echo "
--------------------------------------------|
-                             --=== NSR ===--
--------------------------------------------|
-"
- if [ -z "${NS}" ] || [ -z "${FAILNS}" ];then
-    echo -e "${FAIL} - Unable to get the nameservers directly from the server hosting.\n\n"
-  elif [ "${NS}" = "${NAMESERVER}" ] || [ ! "${FAILNS}" ]; then
-    echo -e "${OK} - NS records got from your nameservers listed at the parent NS are:\n\n$BAR\n\n"
-      paste <(echo "$NS") <(echo "$IPDNS");
-  else
-    echo -e "${ATT} - Unable to get the nameservers directly from the hosting server, the following query is for NS directly on domain:\n\n$BAR\n\n"
-      paste <(echo "$FAILNS") <(echo "$FAILIP");
-    echo -e "${FAIL} The following nameservers are listed at your nameservers as nameservers for your domain ${DOMAIN}, but are not listed at the parent nameservers at ${ROOTS} (see $RFC2181 ). You need to make sure that these nameservers are working. If they are not working ok, you may have problems!"
- fi
+printf "\n\n${und}---- NSR ------------- ${rese}\n\n"
+if [[ -z ${NS} ]]||[[ -z ${FAILNS} ]]
+then
+        printf "${FAIL} - Unable to get the nameservers directly from the server hosting.\n"
+elif [[ ${NS} = ${NAMESERVER} ]]||[[ ! ${FAILNS} ]]
+then
+        printf "${OK} - NS records got from your nameservers listed at the parent NS are:\n"
+        paste <(echo "$NS") <(echo "$IPDNS");
+else
+        printf "${ATT} - Unable to get the nameservers directly from the hosting server, the following query is for NS directly on domain:\n"
+        paste <(echo "$FAILNS") <(echo "$FAILIP");
+        printf "\n${FAIL} The following nameservers are listed at your nameservers for your domain ${DOMAIN}, but are not listed at the parent nameservers at ${ROOTS}\n"
+fi
 }
 
 ## WWW QUERY
 function SHOW_WWW(){
-echo "
--------------------------------------------|
-                             --=== WWW ===--
--------------------------------------------|
-"
- if [ -z "${A}" ];then
-    echo -e "${FAIL} - WWW value from does not seem to point to an IP.\n"
-  else
-    echo -e "${OK} - Domain points the value WWW for:\n\n${A}\n"
- fi
+printf "\n${und}---- WWW -------------${rese}\n\n"
+
+if [[ -z ${A} ]]
+then
+        printf "${FAIL} - WWW value from does not seem to point to an IP.\n\n"
+else
+        printf "${OK} - Domain points the value WWW for:\n${A}\n\n"
+fi
 }
 
 ## PING QUERY
 function SHOW_PING(){
- if ! ${vPING};then
-    echo -e "${FAIL} - Domain did not answer to ping.\n"
-  elif [ "${vPING}" = "${A}" ]; then
-    echo -e "${OK} - Domain is getting a return ping which answers to the same DNS server.\n"
-  else
-   echo -e "${OK} - Domain had response from ping to the IP:\n\n${A}"
- fi
+if ! ${vPING}
+then
+        printf "${FAIL} - Domain did not answer to ping."
+elif [[ ${vPING} = ${A} ]]
+then
+        printf "${OK} - Domain is getting a return ping which answers to the same DNS server."
+else
+        printf "${OK} - Domain had response from ping to the IP:\n${A}"
+fi
 }
 
 ## MX QUERY
 function SHOW_MX(){
-echo "
--------------------------------------------|
-                              --=== MX ===--
--------------------------------------------|
-"
- if [ -z "${MX}" ];then
-    echo -e "${ATT} - Domain has no MX entry registered.\n"
-  else  
-    echo -e "${OK} - Domain points the MX to:\n\n$MXBAR\n\n${MX}\n"
- fi
+printf "\n\n${und}---- MX ---------------${rese}\n\n"
+if [[ -z ${MX} ]]
+then
+        printf "${ATT} - Domain has no MX entry registered.\n"
+else
+        #printf "${OK} - Domain points the MX to:\n${MX}\n\n"
+        printf "${MX}"
+fi
 }
 
 ## REVERSE QUERY
 function SHOW_REVERSE(){
- if [ -z "${REVERSE}" ];then
-    echo -e "${ATT} - No reverse DNS (PTR) entries for ${A}. You should contact your ISP and ask him to add a PTR record for your ips.\n"
-  else
-    echo -e "${OK} - Reverse DNS (PTR) found for: \n\n${A} -> ${REVERSE}\n"
- fi
+if [[ -z ${REVERSE} ]]
+then
+        printf "\n\n${ATT} - No reverse DNS (PTR) entries for ${A}. You should contact your ISP and ask him to add a PTR record for your ips."
+else
+        printf "\n\n${OK} - Reverse DNS (PTR) found for: \n${A} -> ${REVERSE}"
+fi
 }
 
 ## SPF QUERY
 function SHOW_SPF(){
- if [ -z "${SPF}" ] || [ "${SPF}" = "'TXT'" ]; then
-    echo -e "${FAIL} - There are no registered SPF values.\n"
-  else
-    echo -e "${OK} - The SPF registered is:\n\n${SPF}"
- fi
+if [[ -z ${SPF} ]]||[[ ${SPF} = "'TXT'" ]]
+then
+        echo
+         #printf "${FAIL} - There are no registered SPF values.\n"
+else
+        printf "\n\n${und}---- SPF --------------${rese}\n\n"
+        printf "%1s\t%2s\t%3s\t%4s\%5s\t%6s\t%7s\t%8s\t%9s" ${SPF}
+
+fi
 }
 
 ## DKIM QUERY
-function SHOW_DKIM()
-{
-echo "
--------------------------------------------|
-                            --=== DKIM ===--
--------------------------------------------|
-" 
- if [ -z "${DKIM}" ];then
-    echo -e "${ATT} - Default DKIM is not registered.\n"
-  else
-    echo -e "${OK} - Default DKIM registered for domain is:\n\n${DKIM}\n\m"
- fi
+function SHOW_DKIM(){
+if [[ -z ${DKIM} ]]
+then
+        echo
+        #printf "\n${ATT} - Default DKIM is not registered.\n"
+else
+        printf "\n\n${und}---- DKIM -------------${rese}\n\n"
+        printf "%1s\t%2s\t%3s\t%4s\%5s\t%6s\t%7s\t%8s\t%9s" ${DKIM}
+fi
 }
+
+## OFFICE QUERY
+function SHOW_OFFICE(){
+if [[ -z ${OFFICE} ]]
+then
+        echo
+        #printf "${ATT} - Default OFFICE is not registered.\n"
+else
+        printf "\n${und}---- OFFICE -----------${rese}\n\n"
+        printf "%1s\t%2s\t%3s\t%4s\n" ${OFFICE}
+        printf "%1s\t%2s\t%3s\t%4s" ${OFFICE2}
+fi
+}
+
+
+
 
 while getopts "handwpmrkfsbi" opt; do
   case ${opt} in
-    h)
-      SHOW_HELP
-      ;;
-     a)
-      echo $rBR
-      echo $rINT
-      SHOW_NS
-      SHOW_DNS
-      SHOW_WWW
-      SHOW_PING
-      SHOW_MX
-      SHOW_REVERSE
-      SHOW_SPF
-      SHOW_DKIM
-      ;;
-    n) SHOW_NS
-      ;;
-    d) SHOW_DNS
-      ;;
-    w) SHOW_WWW
-      ;;
-    p) SHOW_PING
-      ;;
-    m) SHOW_MX
-      ;;
-    r) SHOW_REVERSE
-      ;;
-    f) SHOW_SPF
-      ;;
-    k) SHOW_DKIM
-      ;;
-    b) echo $rBR 
-     ;;
-    i) echo $rINT
-     ;;
-    h) SHOW_HELP
-     ;;
-     s) echo "Query on $DATE for $DOMAIN" >> $DOMAIN.txt && for SAVE in SHOW_NS SHOW_DNS SHOW_WWW SHOW_PING SHOW_MX SHOW_REVERSE SHOW_SPF SHOW_DKIM; do ${SAVE} >> ${DOMAIN}.txt;done ; echo -e "Your file was saved on `pwd`/$DOMAIN.txt\n";
-     ;;
-        \? ) echo "Invalid option: - $opt" >&2 ;;
-        :  ) echo "Missing argument - $opt" >&2; exit 1;;
-        *  ) echo "Option not implemented: - $opt" >&2; exit 1;;
+        h)      SHOW_HELP       ;;
+        a)      #REGISTRO_BR
+                #INTERNATION_DOMAIN
+                echo $rBR
+                echo $rINT && echo
+                SHOW_NS
+                SHOW_DNS
+                SHOW_WWW
+                SHOW_PING
+                SHOW_MX
+                SHOW_REVERSE
+                SHOW_SPF
+                SHOW_DKIM
+                SHOW_OFFICE
+                echo -e "\n"    ;; # supress ending line
+        n)      SHOW_NS         ;;
+        d)      SHOW_DNS        ;;
+        w)      SHOW_WWW        ;;
+        p)      SHOW_PING       ;;
+        m)      SHOW_MX         ;;
+        r)      SHOW_REVERSE    ;;
+        f)      SHOW_SPF        ;;
+        k)      SHOW_DKIM       ;;
+        b)      echo $rBR       ;;
+        i)      echo $rINT      ;;
+        h)      SHOW_HELP       ;;
+        b)      SHOW_BIND       ;;
+        o)      SHOW_OFFICE     ;;
+        s) echo "Query on $DATE for $DOMAIN" >> $DOMAIN.txt && for SAVE in SHOW_NS SHOW_DNS SHOW_WWW SHOW_PING SHOW_MX SHOW_REVERSE SHOW_SPF SHOW_DKIM;do ${SAVE} >> ${DOMAIN}.txt;done;echo -e "Your file was saved on `pwd`/$DOMAIN.txt\n"; ;;
+        \? ) echo "Invalid option:              - $opt" >&2 ;;
+        :  ) echo "Missing argument             - $opt" >&2; exit 1;;
+        *  ) echo "Option not implemented:      - $opt" >&2; exit 1;;
   esac
 done
-
 shift $(($OPTIND - 1))
-                                         
 exit
