@@ -28,11 +28,13 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
         -r    |   --reverse     : Only return reverse
         -f    |   --spf         : Only return SPF
         -k    |   --dkim        : Only return DKIM
-		-b    |   --br      	: Consult domain on registro.br
+	-b    |   --br      	: Consult domain on registro.br
         -i    |   --int     	: Consults domain o nic.com
-		-u    |   --update      : Verify if exist update
+	-u    |   --update      : Verify if exist update
         -s    |   --save        : Save Query on txt file
-		-h    |   --help      	: Shows available functions
+	-h    |   --help      	: Shows available functions
+	-b    |   --bind        : Print Query on bind format
+        -o    |   --office      : Print MX from Outlook
   eg:
 
   * vdns -a domain.com
@@ -50,4 +52,9 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 *     - Added .es domain to check ( no public whois on this time )
 *     - Correction to domain check
 *     - Added webproxy for whois block on registro.br
+* 1.4 - Added search for .es domains
+*     - Several corrections made
+*     - Improvements in layout
+*     - Search Office records
+*     - Additional check in registro.br
 </pre>
