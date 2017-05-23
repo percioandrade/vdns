@@ -14,34 +14,31 @@ Full DNS lookup:
 vdns -a domain.com
 
 ----
-
-usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain] | [ -u update ] | [ -h --help ]
-
-  Options:
-
 <pre>
--a    |   --all         : Full DNS lookup
--n    |   --ns          : Only return servers NS
--d    |   --dns         : Only return servers NSR
--w    |   --www         : Only return WWW
--p    |   --ping        : Only return ping check on WWW
--m    |   --mx          : Only return MX
--r    |   --reverse     : Only return reverse
--f    |   --spf         : Only return SPF
--k    |   --dkim        : Only return DKIM
--b    |   --br      	: Consult domain on registro.br
--i    |   --int     	: Consults domain o nic.com
--u    |   --update      : Verify if exist update
--s    |   --save        : Save Query on txt file
--h    |   --help      	: Shows available functions
--B    |   --bind        : Print Query on bind format
--o    |   --office      : Print MX from Outlook
+Usage: vdns -a -n -d -w -p -m -r -f -k -s -b -i -c domain
+        -u -h
 
-  eg:
+Options:
+        -a      : Full DNS lookup
+        -n      : Only return root servers
+        -d      : Only return root NSR servers
+        -p      : Only return ping check on WWW
+        -m      : Only return MX
+        -r      : Only return reverse
+        -f      : Only return SPF
+        -k      : Only return DKIM
+        -o      : Only return Office values
+        -c      : Consult domain registrar situation
+        -l      : Check propagation from domain in World
+        -b      : Show DNS zones for domain in bind format
+        -u      : Verify if exist update
+        -s      : Save Query on txt file
+        -h      : Shows available options
 
-  * vdns -a domain.com
-  * vdns -k domain.com
-  * vdns -s domain.com
+        eg:
+        vdns -a domain.com
+        vdns -k domain.com
+        vdns -s domain.com
 </pre>
 
 == Updates ==
@@ -59,4 +56,17 @@ usage: vdns [-a] [-n] [-d] [-w] [-p] [-m] [-r] [-f] [-k] [-s] [-b] [-i] [domain]
 *     - Improvements in layout
 *     - Search Office records
 *     - Additional check in registro.br
+* 1.5 - 
+*     - Change query in registro.br due to client removal 'isavail'
+*     - Fixed domain check .es
+*     - Fixed domain verify input (.com/.br etc)
+*     - Added check if packages perl-libwww and perl-IO-Sockets is installed #Thanks for Alessandro Maia for report
+*     - Added update url check for vDNS ( now is working :D )
+*     - Added registro.br variable for url consult $REG_BR_WHOIS
+*     - Change of query of the domain situation in the registro.br due to the removal of the protocol 'isavailble' 
+*     - Changes in help layout function
+*     - Added propagation function check for domain
+*     - Added option show in bind format
+*     - Added option fast consult in Google Servers
+*     - And a lot of bugs corrected
 </pre>
